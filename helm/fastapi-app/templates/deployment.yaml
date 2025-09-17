@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fastapi-app.fullname" . }}
+  labels:
+    app: {{ include "fastapi-app.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "fastapi-app.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "fastapi-app.name" . }}
+    spec:
+      containers:
+        - name: fastapi
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: 8000
+          resources:
+            {{- toYaml .Values.resources | indent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health  
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10

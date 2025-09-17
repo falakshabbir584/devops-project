@@ -7,16 +7,26 @@ variables:
 
 build-and-push:
   stage: build
-  image: docker:latest
-  services:
-    - docker:dind
 
   before_script:
     - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - echo "$GCP_SERVICE_ACCOUNT_KEY" > key.json
+    - export GOOGLE_APPLICATION_CREDENTIALS="key.json"
+    - echo "GCP authentication configured."
+    - echo "$KUBECONFIG_DATA" | base64 -d > $HOME/.kube/config
+
 
   script:
     - docker build -t $IMAGE_NAME:$IMAGE_TAG .
     - docker push $IMAGE_NAME:$IMAGE_TAG
+    - helm upgrade --install fastapi-app ./helm/fastapi-app \
+        --set image.repository=$IMAGE_NAME \
+        --set image.tag=$IMAGE_TAG
+  
+  after_script:
+    - rm -f gcp-key.json
+    - echo "GCP service account key cleaned up."
+
 
   only:
     - main
