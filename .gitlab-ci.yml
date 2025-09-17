@@ -1,0 +1,22 @@
+stages:
+  - build
+
+variables:
+  IMAGE_TAG: latest
+  IMAGE_NAME: aaannannana/test-work
+
+build-and-push:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+
+  before_script:
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+  script:
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
+    - docker push $IMAGE_NAME:$IMAGE_TAG
+
+  only:
+    - main
